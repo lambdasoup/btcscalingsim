@@ -3,6 +3,7 @@ module Main exposing (..)
 import Html exposing (..)
 import Material
 import Material.Slider as Slider
+import Material.Grid exposing (grid, cell, size, Device(..))
 
 
 -- MODEL
@@ -63,21 +64,23 @@ type alias Mdl =
 
 view : Model -> Html Msg
 view model =
-    div
-        []
-        [ Slider.view
-            [ Slider.onChange BlocksizeChange
-            , Slider.value (toFloat model.blocksize)
-            , Slider.max 32000000
-            , Slider.min 0
-            , Slider.step 1000000
-            ]
-        , text ("Block size: " ++ toString model.blocksize)
-        , text ("Average transaction size: " ++ toString model.avgTxSize)
-        , text ("Transactions per block : " ++ toString (txPerBlock model))
-        , text ("Blocks per day : " ++ toString blocksPerDay)
-        , text ("Transactions per day : " ++ toString (txPerDay model))
-        ]
+    grid []
+      [ cell [ size All 4 ]
+          [ h5 [] [ text "Block settings" ]
+          , Slider.view
+              [ Slider.onChange BlocksizeChange
+              , Slider.value (toFloat model.blocksize)
+              , Slider.max 32000000
+              , Slider.min 1000000
+              , Slider.step 1000000
+              ]
+          , p [] [ text ("Block size: " ++ toString model.blocksize)]
+          , p [] [ text ("Average transaction size: " ++ toString model.avgTxSize)]
+          , p [] [ text ("Transactions per block : " ++ toString (txPerBlock model))]
+          , p [] [ text ("Blocks per day : " ++ toString blocksPerDay)]
+          , p [] [ text ("Transactions per day : " ++ toString (txPerDay model))]
+          ]
+      ]
 
 main : Program Never Model Msg
 main =
