@@ -13,6 +13,7 @@ type alias Model =
     { count : Int
     , blocksize : Int
     , avgTxSize : Int
+    , userTxPerWeek : Int
     , mdl :
         Material.Model
         -- Boilerplate: model store for any and all Mdl components you use.
@@ -24,6 +25,7 @@ model =
     { count = 0
     , blocksize = 1000000
     , avgTxSize = 500
+    , userTxPerWeek = 7
     , mdl =
         Material.model
         -- Boilerplate: Always use this initial Mdl model store.
@@ -34,6 +36,7 @@ model =
 
 type Msg
     = BlocksizeChange Float
+    | UserTxPerWeekChange Float
     | Mdl (Material.Msg Msg)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -41,6 +44,11 @@ update msg model =
     case msg of
         BlocksizeChange value ->
             ( { model | blocksize = round value }
+            , Cmd.none
+            )
+
+        UserTxPerWeekChange value ->
+            ( { model | userTxPerWeek = round value }
             , Cmd.none
             )
 
@@ -53,11 +61,14 @@ update msg model =
 txPerBlock : Model -> Int
 txPerBlock model = round (toFloat model.blocksize / toFloat model.avgTxSize)
 
-blocksPerDay : Int
-blocksPerDay = round (24 * 60 / 10.0)
+blocksPerWeek : Int
+blocksPerWeek = round (7 * 24 * 60 / 10.0)
 
-txPerDay : Model -> Int
-txPerDay model = blocksPerDay * txPerBlock model
+txPerWeek : Model -> Int
+txPerWeek model = blocksPerWeek * txPerBlock model
+
+usersSupported : Model -> Int
+usersSupported model = round (toFloat (txPerWeek model) / toFloat (model.userTxPerWeek))
 
 type alias Mdl =
     Material.Model
@@ -66,7 +77,7 @@ view : Model -> Html Msg
 view model =
     grid []
       [ cell [ size All 4 ]
-          [ h5 [] [ text "Block settings" ]
+          [ h5 [] [ text "Block attributes" ]
           , Slider.view
               [ Slider.onChange BlocksizeChange
               , Slider.value (toFloat model.blocksize)
@@ -77,8 +88,23 @@ view model =
           , p [] [ text ("Block size: " ++ toString model.blocksize)]
           , p [] [ text ("Average transaction size: " ++ toString model.avgTxSize)]
           , p [] [ text ("Transactions per block : " ++ toString (txPerBlock model))]
-          , p [] [ text ("Blocks per day : " ++ toString blocksPerDay)]
-          , p [] [ text ("Transactions per day : " ++ toString (txPerDay model))]
+          , p [] [ text ("Blocks per week : " ++ toString blocksPerWeek)]
+          , p [] [ text ("Transactions per week : " ++ toString (txPerWeek model))]
+          ]
+      , cell [ size All 4 ]
+          [ h5 [] [ text "User attributes" ]
+          , Slider.view
+              [ Slider.onChange UserTxPerWeekChange
+              , Slider.value (toFloat model.userTxPerWeek)
+              , Slider.max 1000
+              , Slider.min 1
+              , Slider.step 1
+              ]
+          , p [] [ text ("User TX per week: " ++ toString model.userTxPerWeek)]
+          ]
+      , cell [ size All 4 ]
+          [ h5 [] [ text "Bitcoin performance" ]
+          , p [] [ text ("Users supported: " ++ toString (usersSupported model))]
           ]
       ]
 
