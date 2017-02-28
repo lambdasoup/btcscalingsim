@@ -77,7 +77,7 @@ view : Model -> Html Msg
 view model =
     grid []
       [ cell [ size All 4 ]
-          [ h5 [] [ text "Block attributes" ]
+          [ h5 [] [ text "Blockchain settings" ]
           , Slider.view
               [ Slider.onChange BlocksizeChange
               , Slider.value (toFloat model.blocksize)
@@ -86,13 +86,9 @@ view model =
               , Slider.step 1000000
               ]
           , p [] [ text ("Block size: " ++ toString model.blocksize)]
-          , p [] [ text ("Average transaction size: " ++ toString model.avgTxSize)]
-          , p [] [ text ("Transactions per block : " ++ toString (txPerBlock model))]
-          , p [] [ text ("Blocks per week : " ++ toString blocksPerWeek)]
-          , p [] [ text ("Transactions per week : " ++ toString (txPerWeek model))]
           ]
       , cell [ size All 4 ]
-          [ h5 [] [ text "User attributes" ]
+          [ h5 [] [ text "Usage settings" ]
           , Slider.view
               [ Slider.onChange UserTxPerWeekChange
               , Slider.value (toFloat model.userTxPerWeek)
@@ -100,7 +96,8 @@ view model =
               , Slider.min 1
               , Slider.step 1
               ]
-          , p [] [ text ("User TX per week: " ++ toString model.userTxPerWeek)]
+          , p [] [ text ("User transaction per week: " ++ toString model.userTxPerWeek)]
+          , p [] [ text ("Average transaction size: " ++ toString model.avgTxSize)]
           ]
       , cell [ size All 4 ]
           [ h5 [] [ text "Bitcoin performance" ]
