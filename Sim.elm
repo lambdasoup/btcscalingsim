@@ -201,7 +201,7 @@ blockchainView title model =
       , hr [] []
       , dataTable
           "Segregated Witness"
-          "Adds the blocksize-extending effect of Segregated Witness"
+          "Adds a blocksize-extending effect of factor 2.1"
           ( Toggles.switch Mdl [0] model.mdl
               [ Options.onToggle SegWitActiveChange
               , Toggles.ripple
