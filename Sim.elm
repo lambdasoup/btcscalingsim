@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (..)
+import Html.Attributes exposing (class)
 import Material
 import Material.Slider as Slider
 import Material.Grid exposing (grid, cell, size, Device(..))
@@ -70,6 +71,9 @@ txPerWeek model = blocksPerWeek * txPerBlock model
 usersSupported : Model -> Int
 usersSupported model = round (toFloat (txPerWeek model) / toFloat (model.userTxPerWeek))
 
+maxGrowthPerYear : Model -> Int
+maxGrowthPerYear model = blocksPerWeek * 52 * model.blocksize
+
 type alias Mdl =
     Material.Model
 
@@ -78,14 +82,17 @@ view model =
     grid []
       [ cell [ size All 4 ]
           [ h5 [] [ text "Blockchain settings" ]
-          , Slider.view
-              [ Slider.onChange BlocksizeChange
-              , Slider.value (toFloat model.blocksize)
-              , Slider.max 32000000
-              , Slider.min 1000000
-              , Slider.step 1000000
+          , div []
+              [ div [] [ text ("Block size: " ++ toString model.blocksize)]
+              , Slider.view
+                  [ Slider.onChange BlocksizeChange
+                  , Slider.value (toFloat model.blocksize)
+                  , Slider.max 32000000
+                  , Slider.min 1000000
+                  , Slider.step 1000000
+                  ]
+              , div [ class "caption" ] [ text ("Do not edit this setting if you only have a 64kbit modem ;-)")]
               ]
-          , p [] [ text ("Block size: " ++ toString model.blocksize)]
           ]
       , cell [ size All 4 ]
           [ h5 [] [ text "Usage settings" ]
@@ -96,12 +103,13 @@ view model =
               , Slider.min 1
               , Slider.step 1
               ]
-          , p [] [ text ("User transaction per week: " ++ toString model.userTxPerWeek)]
+          , p [] [ text ("User transactions per week: " ++ toString model.userTxPerWeek)]
           , p [] [ text ("Average transaction size: " ++ toString model.avgTxSize)]
           ]
       , cell [ size All 4 ]
           [ h5 [] [ text "Bitcoin performance" ]
           , p [] [ text ("Users supported: " ++ toString (usersSupported model))]
+          , p [] [ text ("Max. Blockchain growth per year: " ++ toString (maxGrowthPerYear model))]
           ]
       ]
 
