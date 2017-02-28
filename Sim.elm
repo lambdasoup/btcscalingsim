@@ -11,8 +11,7 @@ import Material.Grid exposing (grid, cell, size, Device(..))
 
 
 type alias Model =
-    { count : Int
-    , blocksize : Int
+    { blocksize : Int
     , avgTxSize : Int
     , userTxPerWeek : Int
     , mdl :
@@ -23,8 +22,7 @@ type alias Model =
 
 model : Model
 model =
-    { count = 0
-    , blocksize = 1000000
+    { blocksize = 1000000
     , avgTxSize = 500
     , userTxPerWeek = 7
     , mdl =
