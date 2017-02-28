@@ -110,9 +110,9 @@ dataTable title caption e1 e2 =
 view : Model -> Html Msg
 view model =
     grid []
-      [ cell [ size All 4 ] (blockchainView "Blockchain settings" model)
-      , cell [ size All 4 ] (usageView "Usage settings" model)
-      , cell [ size All 4 ] (resultView "Bitcoin performance" model)
+      [ cell [ size All 4 ] (blockchainView "Blockchain" model)
+      , cell [ size All 4 ] (usageView "Usage" model)
+      , cell [ size All 4 ] (resultView "Result" model)
       ]
 
 resultView : String -> Model -> List (Html Msg)
@@ -122,13 +122,13 @@ resultView title model =
       "Users supported"
       "How many users can use Bitcoin with these settings"
       ( text "")
-      ( text (formatInt (usersSupported model)))
+      ( text (formatInt (usersSupported model) ++ " users"))
     , hr [] []
     , dataTable
       "Blockchain growth"
       "The maximum Blockchain growth per year."
       ( text "")
-      ( text (formatBytes (maxGrowthPerYear model)))
+      ( text (formatBytes (maxGrowthPerYear model) ++ " / year"))
     ]
 
 usageView : String -> Model -> List (Html Msg)
@@ -145,11 +145,11 @@ usageView title model =
         , Slider.step 1
         ]
       )
-      ( text (formatInt model.userTxPerWeek))
+      ( text ((formatInt model.userTxPerWeek) ++ " TX / week"))
     , hr [] []
     , dataTable
       "Average transaction size"
-      "The average Bitcoin transaction size."
+      "The average Bitcoin transaction size"
       (text "")
       (text (formatBytes model.avgTxSize))
     ]
@@ -159,7 +159,7 @@ blockchainView title model =
     [ h4 [] [ text title ]
     , dataTable
         "Block size"
-        "Do not edit this setting if you only have a 64kbit modem ;-)"
+        "The base block size limit"
         (Slider.view
             [ Slider.onChange BlocksizeChange
             , Slider.value (toFloat model.blocksize)
