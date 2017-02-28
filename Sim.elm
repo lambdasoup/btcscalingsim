@@ -68,6 +68,9 @@ myLocale =
 formatInt : Int -> String
 formatInt int = format { myLocale | decimals = 0 } (toFloat int)
 
+formatFloat : Float -> String
+formatFloat float = format { myLocale | decimals = 2 } float
+
 formatBytes : Int -> String
 formatBytes int =
     if int >= 10^12 then format myLocale (toFloat int / toFloat 10^12) ++ " TB"
@@ -84,6 +87,9 @@ blocksPerWeek = round (7 * 24 * 60 / 10.0)
 
 txPerWeek : Model -> Int
 txPerWeek model = blocksPerWeek * txPerBlock model
+
+txPerSecond : Model -> Float
+txPerSecond model = toFloat (txPerBlock model) / (10 * 60)
 
 usersSupported : Model -> Int
 usersSupported model = round (toFloat (txPerWeek model) / toFloat (model.userTxPerWeek))
@@ -126,9 +132,15 @@ resultView title model =
     , hr [] []
     , dataTable
       "Blockchain growth"
-      "The maximum Blockchain growth per year."
+      "The maximum Blockchain growth per year"
       ( text "")
       ( text (formatBytes (maxGrowthPerYear model) ++ " / year"))
+    , hr [] []
+    , dataTable
+      "Throughput"
+      "Transactions per second possible without creating a growing backlog. 2000 TX/s is usually called 'Visa level'."
+      ( text "")
+      ( text (formatFloat (txPerSecond model) ++ " TX / second"))
     ]
 
 usageView : String -> Model -> List (Html Msg)
@@ -148,8 +160,8 @@ usageView title model =
       ( text ((formatInt model.userTxPerWeek) ++ " TX / week"))
     , hr [] []
     , dataTable
-      "Average transaction size"
-      "The average Bitcoin transaction size"
+      "Transaction size"
+      "The average Bitcoin transaction size in bytes"
       (text "")
       (text (formatBytes model.avgTxSize))
     ]
