@@ -94,41 +94,82 @@ maxGrowthPerYear model = blocksPerWeek * 52 * model.blocksize
 type alias Mdl =
     Material.Model
 
+dataTable : String -> String -> Html Msg -> Html Msg -> Html Msg
+dataTable title caption e1 e2 =
+  div []
+      [ div [] [ text title ]
+      , div [ class "caption" ] [ text caption]
+      , table []
+          [ tr []
+              [ td [] [ e1 ]
+              , td [] [ e2 ]
+              ]
+          ]
+      ]
+
 view : Model -> Html Msg
 view model =
     grid []
-      [ cell [ size All 4 ]
-          [ h5 [] [ text "Blockchain settings" ]
-          , div []
-              [ div [] [ text ("Block size: " ++ formatBytes model.blocksize)]
-              , Slider.view
-                  [ Slider.onChange BlocksizeChange
-                  , Slider.value (toFloat model.blocksize)
-                  , Slider.max 128000000
-                  , Slider.min 1000000
-                  , Slider.step 1000000
-                  ]
-              , div [ class "caption" ] [ text ("Do not edit this setting if you only have a 64kbit modem ;-)")]
-              ]
-          ]
-      , cell [ size All 4 ]
-          [ h5 [] [ text "Usage settings" ]
-          , Slider.view
-              [ Slider.onChange UserTxPerWeekChange
-              , Slider.value (toFloat model.userTxPerWeek)
-              , Slider.max 1000
-              , Slider.min 1
-              , Slider.step 1
-              ]
-          , p [] [ text ("User transactions per week: " ++ formatInt model.userTxPerWeek)]
-          , p [] [ text ("Average transaction size: " ++ formatBytes model.avgTxSize)]
-          ]
-      , cell [ size All 4 ]
-          [ h5 [] [ text "Bitcoin performance" ]
-          , p [] [ text ("Users supported: " ++ formatInt (usersSupported model))]
-          , p [] [ text ("Max. Blockchain growth per year: " ++ formatBytes (maxGrowthPerYear model))]
-          ]
+      [ cell [ size All 4 ] (blockchainView "Blockchain settings" model)
+      , cell [ size All 4 ] (usageView "Usage settings" model)
+      , cell [ size All 4 ] (resultView "Bitcoin performance" model)
       ]
+
+resultView : String -> Model -> List (Html Msg)
+resultView title model =
+    [ h4 [] [ text title ]
+    , dataTable
+      "Users supported"
+      "How many users can use Bitcoin with these settings"
+      ( text "")
+      ( text (formatInt (usersSupported model)))
+    , hr [] []
+    , dataTable
+      "Blockchain growth"
+      "The maximum Blockchain growth per year."
+      ( text "")
+      ( text (formatBytes (maxGrowthPerYear model)))
+    ]
+
+usageView : String -> Model -> List (Html Msg)
+usageView title model =
+    [ h4 [] [ text title ]
+    , dataTable
+      "User transactions per week"
+      "How many transaction the average Bitcoin user does per week"
+      ( Slider.view
+        [ Slider.onChange UserTxPerWeekChange
+        , Slider.value (toFloat model.userTxPerWeek)
+        , Slider.max 1000
+        , Slider.min 1
+        , Slider.step 1
+        ]
+      )
+      ( text (formatInt model.userTxPerWeek))
+    , hr [] []
+    , dataTable
+      "Average transaction size"
+      "The average Bitcoin transaction size."
+      (text "")
+      (text (formatBytes model.avgTxSize))
+    ]
+
+blockchainView : String -> Model -> List (Html Msg)
+blockchainView title model =
+    [ h4 [] [ text title ]
+    , dataTable
+        "Block size"
+        "Do not edit this setting if you only have a 64kbit modem ;-)"
+        (Slider.view
+            [ Slider.onChange BlocksizeChange
+            , Slider.value (toFloat model.blocksize)
+            , Slider.max 128000000
+            , Slider.min 1000000
+            , Slider.step 1000000
+            ]
+        )
+        (text (formatBytes model.blocksize))
+    ]
 
 main : Program Never Model Msg
 main =
