@@ -3,12 +3,13 @@ module Main exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class)
 import Material
+import FormatNumber exposing (format)
+import FormatNumber.Locales exposing (Locale)
 import Material.Slider as Slider
 import Material.Grid exposing (grid, cell, size, Device(..))
 
 
 -- MODEL
-
 
 type alias Model =
     { blocksize : Int
@@ -57,6 +58,24 @@ update msg model =
 
 -- VIEW
 
+myLocale : Locale
+myLocale =
+    { decimals = 1
+    , thousandSeparator = "'"
+    , decimalSeparator = "."
+    }
+
+formatInt : Int -> String
+formatInt int = format { myLocale | decimals = 0 } (toFloat int)
+
+formatBytes : Int -> String
+formatBytes int =
+    if int >= 10^12 then format myLocale (toFloat int / toFloat 10^12) ++ " TB"
+    else if int >= 10^9 then format myLocale (toFloat int / toFloat 10^9) ++ " GB"
+    else if int >= 10^6 then format myLocale (toFloat int / toFloat 10^6) ++ " MB"
+    else if int >= 10^3 then format myLocale (toFloat int / toFloat 10^3) ++ " KB"
+    else toString int ++ " B"
+
 txPerBlock : Model -> Int
 txPerBlock model = round (toFloat model.blocksize / toFloat model.avgTxSize)
 
@@ -81,11 +100,11 @@ view model =
       [ cell [ size All 4 ]
           [ h5 [] [ text "Blockchain settings" ]
           , div []
-              [ div [] [ text ("Block size: " ++ toString model.blocksize)]
+              [ div [] [ text ("Block size: " ++ formatBytes model.blocksize)]
               , Slider.view
                   [ Slider.onChange BlocksizeChange
                   , Slider.value (toFloat model.blocksize)
-                  , Slider.max 32000000
+                  , Slider.max 128000000
                   , Slider.min 1000000
                   , Slider.step 1000000
                   ]
@@ -101,13 +120,13 @@ view model =
               , Slider.min 1
               , Slider.step 1
               ]
-          , p [] [ text ("User transactions per week: " ++ toString model.userTxPerWeek)]
-          , p [] [ text ("Average transaction size: " ++ toString model.avgTxSize)]
+          , p [] [ text ("User transactions per week: " ++ formatInt model.userTxPerWeek)]
+          , p [] [ text ("Average transaction size: " ++ formatBytes model.avgTxSize)]
           ]
       , cell [ size All 4 ]
           [ h5 [] [ text "Bitcoin performance" ]
-          , p [] [ text ("Users supported: " ++ toString (usersSupported model))]
-          , p [] [ text ("Max. Blockchain growth per year: " ++ toString (maxGrowthPerYear model))]
+          , p [] [ text ("Users supported: " ++ formatInt (usersSupported model))]
+          , p [] [ text ("Max. Blockchain growth per year: " ++ formatBytes (maxGrowthPerYear model))]
           ]
       ]
 
