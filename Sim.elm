@@ -6,6 +6,8 @@ import Material
 import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (Locale)
 import Material.Slider as Slider
+import Material.Toggles as Toggles
+import Material.Options as Options
 import Material.Grid exposing (grid, cell, size, Device(..))
 
 
@@ -15,6 +17,7 @@ type alias Model =
     { blocksize : Int
     , avgTxSize : Int
     , userTxPerWeek : Int
+    , segwitActive : Bool
     , mdl :
         Material.Model
         -- Boilerplate: model store for any and all Mdl components you use.
@@ -26,6 +29,7 @@ model =
     { blocksize = 1000000
     , avgTxSize = 500
     , userTxPerWeek = 7
+    , segwitActive = False
     , mdl =
         Material.model
         -- Boilerplate: Always use this initial Mdl model store.
@@ -37,6 +41,7 @@ model =
 type Msg
     = BlocksizeChange Float
     | UserTxPerWeekChange Float
+    | SegWitActiveChange
     | Mdl (Material.Msg Msg)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -49,6 +54,11 @@ update msg model =
 
         UserTxPerWeekChange value ->
             ( { model | userTxPerWeek = round value }
+            , Cmd.none
+            )
+
+        SegWitActiveChange ->
+            ( { model | segwitActive = not model.segwitActive }
             , Cmd.none
             )
 
@@ -79,8 +89,15 @@ formatBytes int =
     else if int >= 10^3 then format myLocale (toFloat int / toFloat 10^3) ++ " KB"
     else toString int ++ " B"
 
+effectiveBlocksize : Model -> Int
+effectiveBlocksize model =
+    if model.segwitActive then
+        round ((toFloat model.blocksize) * 2.1)
+    else
+        model.blocksize
+
 txPerBlock : Model -> Int
-txPerBlock model = round (toFloat model.blocksize / toFloat model.avgTxSize)
+txPerBlock model = round (toFloat (effectiveBlocksize model) / toFloat model.avgTxSize)
 
 blocksPerWeek : Int
 blocksPerWeek = round (7 * 24 * 60 / 10.0)
@@ -95,7 +112,7 @@ usersSupported : Model -> Int
 usersSupported model = round (toFloat (txPerWeek model) / toFloat (model.userTxPerWeek))
 
 maxGrowthPerYear : Model -> Int
-maxGrowthPerYear model = blocksPerWeek * 52 * model.blocksize
+maxGrowthPerYear model = blocksPerWeek * 52 * (effectiveBlocksize model)
 
 type alias Mdl =
     Material.Model
@@ -181,6 +198,18 @@ blockchainView title model =
             ]
         )
         (text (formatBytes model.blocksize))
+      , hr [] []
+      , dataTable
+          "Segregated Witness"
+          "Adds the blocksize-extending effect of Segregated Witness"
+          ( Toggles.switch Mdl [0] model.mdl
+              [ Options.onToggle SegWitActiveChange
+              , Toggles.ripple
+              , Toggles.value model.segwitActive
+              ]
+              [ text "" ]
+          )
+          (text "")
     ]
 
 main : Program Never Model Msg
