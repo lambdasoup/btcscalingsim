@@ -18,6 +18,7 @@ type alias Model =
     , avgTxSize : Int
     , userTxPerWeek : Int
     , segwitActive : Bool
+    , segwitFactor : Float
     , mdl :
         Material.Model
         -- Boilerplate: model store for any and all Mdl components you use.
@@ -30,6 +31,7 @@ model =
     , avgTxSize = 500
     , userTxPerWeek = 7
     , segwitActive = False
+    , segwitFactor = 1.6
     , mdl =
         Material.model
         -- Boilerplate: Always use this initial Mdl model store.
@@ -41,6 +43,7 @@ model =
 type Msg
     = BlocksizeChange Float
     | UserTxPerWeekChange Float
+    | SegWitFactorChange Float
     | TxSizeChange Float
     | SegWitActiveChange
     | Mdl (Material.Msg Msg)
@@ -68,6 +71,11 @@ update msg model =
             , Cmd.none
             )
 
+        SegWitFactorChange value ->
+            ( { model | segwitFactor = value }
+            , Cmd.none
+            )
+
         -- Boilerplate: Mdl action handler.
         Mdl msg_ ->
             Material.update Mdl msg_ model
@@ -84,8 +92,8 @@ myLocale =
 formatInt : Int -> String
 formatInt int = format { myLocale | decimals = 0 } (toFloat int)
 
-formatFloat : Float -> String
-formatFloat float = format { myLocale | decimals = 2 } float
+formatFloat : Int -> Float -> String
+formatFloat ds float = format { myLocale | decimals = ds } float
 
 formatBytes : Int -> String
 formatBytes int =
@@ -98,7 +106,7 @@ formatBytes int =
 effectiveBlocksize : Model -> Int
 effectiveBlocksize model =
     if model.segwitActive then
-        round ((toFloat model.blocksize) * 2.1)
+        round ((toFloat model.blocksize) * model.segwitFactor)
     else
         model.blocksize
 
@@ -136,6 +144,20 @@ dataTable title caption e1 e2 =
           ]
       ]
 
+dataTable3 : String -> List (Html Msg) -> Html Msg -> Html Msg -> Html Msg -> Html Msg
+dataTable3 title caption e1 e2 e3 =
+  div []
+      [ div [] [ text title ]
+      , div [ class "caption" ] caption
+      , table []
+          [ tr []
+              [ td [] [ e1 ]
+              , td [] [ e2 ]
+              , td [] [ e3 ]
+              ]
+          ]
+      ]
+
 view : Model -> Html Msg
 view model =
     grid []
@@ -163,7 +185,7 @@ resultView title model =
       "Throughput"
       [ text "Transactions per second possible without creating a growing backlog. 2000 TX/s is usually called 'Visa level'." ]
       ( text "")
-      ( text (formatFloat (txPerSecond model) ++ " TX / second"))
+      ( text (formatFloat 2 (txPerSecond model) ++ " TX / second"))
     ]
 
 usageView : String -> Model -> List (Html Msg)
@@ -214,9 +236,11 @@ blockchainView title model =
         )
         (text (formatBytes model.blocksize))
       , hr [] []
-      , dataTable
+      , dataTable3
           "Segregated Witness"
-          [ text "Adds a blocksize-extending effect of factor 2.1" ]
+          [ text "Adds a blocksize-extending effect. "
+          , a [ href "https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2015-December/011869.html", target "_blank" ] [ text "Estimated factor" ]
+          ]
           ( Toggles.switch Mdl [0] model.mdl
               [ Options.onToggle SegWitActiveChange
               , Toggles.ripple
@@ -224,7 +248,15 @@ blockchainView title model =
               ]
               [ text "" ]
           )
-          (text "")
+          (Slider.view
+              [ Slider.onChange SegWitFactorChange
+              , Slider.value model.segwitFactor
+              , Slider.max 4
+              , Slider.min 1
+              , Slider.step 0.1
+              ]
+          )
+          (text (formatFloat 1 model.segwitFactor))
     ]
 
 main : Program Never Model Msg
