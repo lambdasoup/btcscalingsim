@@ -169,7 +169,7 @@ usageView title model =
       ( Slider.view
         [ Slider.onChange UserTxPerWeekChange
         , Slider.value (toFloat model.userTxPerWeek)
-        , Slider.max 1000
+        , Slider.max 100
         , Slider.min 1
         , Slider.step 1
         ]
