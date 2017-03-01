@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, href, target)
 import Material
 import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (Locale)
@@ -41,6 +41,7 @@ model =
 type Msg
     = BlocksizeChange Float
     | UserTxPerWeekChange Float
+    | TxSizeChange Float
     | SegWitActiveChange
     | Mdl (Material.Msg Msg)
 
@@ -54,6 +55,11 @@ update msg model =
 
         UserTxPerWeekChange value ->
             ( { model | userTxPerWeek = round value }
+            , Cmd.none
+            )
+
+        TxSizeChange value ->
+            ( { model | avgTxSize = round value }
             , Cmd.none
             )
 
@@ -117,11 +123,11 @@ maxGrowthPerYear model = blocksPerWeek * 52 * (effectiveBlocksize model)
 type alias Mdl =
     Material.Model
 
-dataTable : String -> String -> Html Msg -> Html Msg -> Html Msg
+dataTable : String -> List (Html Msg) -> Html Msg -> Html Msg -> Html Msg
 dataTable title caption e1 e2 =
   div []
       [ div [] [ text title ]
-      , div [ class "caption" ] [ text caption]
+      , div [ class "caption" ] caption
       , table []
           [ tr []
               [ td [] [ e1 ]
@@ -143,19 +149,19 @@ resultView title model =
     [ h4 [] [ text title ]
     , dataTable
       "Users supported"
-      "How many users can use Bitcoin with these settings"
+      [ text "How many users can use Bitcoin with these settings" ]
       ( text "")
       ( text (formatInt (usersSupported model) ++ " users"))
     , hr [] []
     , dataTable
       "Blockchain growth"
-      "The maximum Blockchain growth per year"
+      [ text "The maximum Blockchain growth per year" ]
       ( text "")
       ( text (formatBytes (maxGrowthPerYear model) ++ " / year"))
     , hr [] []
     , dataTable
       "Throughput"
-      "Transactions per second possible without creating a growing backlog. 2000 TX/s is usually called 'Visa level'."
+      [ text "Transactions per second possible without creating a growing backlog. 2000 TX/s is usually called 'Visa level'." ]
       ( text "")
       ( text (formatFloat (txPerSecond model) ++ " TX / second"))
     ]
@@ -165,7 +171,7 @@ usageView title model =
     [ h4 [] [ text title ]
     , dataTable
       "User transactions per week"
-      "How many transaction the average Bitcoin user does per week"
+      [ text "How many transaction the average Bitcoin user does per week" ]
       ( Slider.view
         [ Slider.onChange UserTxPerWeekChange
         , Slider.value (toFloat model.userTxPerWeek)
@@ -178,8 +184,17 @@ usageView title model =
     , hr [] []
     , dataTable
       "Transaction size"
-      "The average Bitcoin transaction size in bytes"
-      (text "")
+      [ text "The average Bitcoin transaction size in bytes. "
+      , a [ href "https://tradeblock.com/bitcoin/historical/1h-f-tsize_per_avg-01101", target "_blank" ] [ text "Current statistics" ]
+      ]
+      ( Slider.view
+        [ Slider.onChange TxSizeChange
+        , Slider.value (toFloat model.avgTxSize)
+        , Slider.max 1000
+        , Slider.min 100
+        , Slider.step 50
+        ]
+      )
       (text (formatBytes model.avgTxSize))
     ]
 
@@ -188,7 +203,7 @@ blockchainView title model =
     [ h4 [] [ text title ]
     , dataTable
         "Block size"
-        "The base block size limit"
+        [ text "The base block size limit" ]
         (Slider.view
             [ Slider.onChange BlocksizeChange
             , Slider.value (toFloat model.blocksize)
@@ -201,7 +216,7 @@ blockchainView title model =
       , hr [] []
       , dataTable
           "Segregated Witness"
-          "Adds a blocksize-extending effect of factor 2.1"
+          [ text "Adds a blocksize-extending effect of factor 2.1" ]
           ( Toggles.switch Mdl [0] model.mdl
               [ Options.onToggle SegWitActiveChange
               , Toggles.ripple
