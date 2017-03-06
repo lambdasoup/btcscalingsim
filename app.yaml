@@ -12,6 +12,6 @@ handlers:
   upload: elm.js
   secure: always
 
-- url: /(.*)
+- url: /noop
   script: _go_app
   secure: always
